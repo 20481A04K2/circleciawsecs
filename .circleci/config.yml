@@ -39,14 +39,14 @@ jobs:
       - run:
           name: Authenticate to ECR Public
           command: |
-            REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
+            REPOSITORY_URI="public.ecr.aws/g5z4y9g4/vamsi-repo"
             IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
-            aws ecr-public get-login-password --region $ECR_REGION | docker login --username AWS --password-stdin public.ecr.aws/z8i7v1n4
+            aws ecr-public get-login-password --region $ECR_REGION | docker login --username AWS --password-stdin public.ecr.aws/g5z4y9g4
 
       - run:
           name: Build and Push Docker Image
           command: |
-            REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
+            REPOSITORY_URI="public.ecr.aws/g5z4y9g4/vamsi-repo"
             IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
             docker build -t $REPOSITORY_URI:$IMAGE_TAG .
             docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest
@@ -57,7 +57,7 @@ jobs:
           name: Register ECS Task Definition
           command: |
             IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
-            REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
+            REPOSITORY_URI="public.ecr.aws/g5z4y9g4/vamsi-repo"
 
             echo '{
               "family": "'"$TASK_DEFINITION_FAMILY"'",
