@@ -17,9 +17,9 @@ jobs:
       SERVICE_NAME: "vamsi-task-service"
       TASK_DEFINITION_FAMILY: "vamsi-task"
       CONTAINER_NAME: "vamsi-repo"
-      SUBNET_ID: "subnet-xxxxxx"
-      SECURITY_GROUP_ID: "sg-xxxxxx"
-      EXECUTION_ROLE_ARN: "arn:aws:iam::528757813453:role/ecsTaskExecutionRole"
+      SUBNET_ID: "subnet-012b2b066527fec87"
+      SECURITY_GROUP_ID: "sg-022ceff300ebad323"
+      EXECUTION_ROLE_ARN: arn:aws:iam::528757813453:role/ecsTaskExecutionRole
 
     steps:
       - checkout
