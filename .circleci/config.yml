@@ -1,14 +1,14 @@
 version: 2.1
 
 executors:
-  docker-executor:
+  aws-cli-executor:
     docker:
-      - image: cimg/python:3.11
+      - image: amazon/aws-cli
     working_directory: ~/project
 
 jobs:
   deploy:
-    executor: docker-executor
+    executor: aws-cli-executor
     environment:
       AWS_REGION: ap-south-1
       ECR_REGION: us-east-1
@@ -25,40 +25,33 @@ jobs:
       - checkout
 
       - run:
-          name: Install AWS CLI & Docker
+          name: Install Docker
           command: |
-            sudo apt update
-            sudo apt install -y awscli docker.io jq unzip
-            sudo service docker start
+            yum install -y docker
+            service docker start
 
       - run:
           name: Login to Amazon ECR Public
           command: |
-            export REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
-            export IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
+            REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
+            IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
             aws ecr-public get-login-password --region $ECR_REGION | docker login --username AWS --password-stdin public.ecr.aws/z8i7v1n4
 
       - run:
-          name: Build Docker Image
+          name: Build and Push Docker Image
           command: |
-            export REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
-            export IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
+            REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
+            IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
             docker build -t $REPOSITORY_URI:$IMAGE_TAG .
             docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest
-
-      - run:
-          name: Push Docker Image to ECR
-          command: |
-            export REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
-            export IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
             docker push $REPOSITORY_URI:$IMAGE_TAG
             docker push $REPOSITORY_URI:latest
 
       - run:
           name: Register ECS Task Definition
           command: |
-            export IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
-            export REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
+            IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
+            REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
 
             echo '{
               "family": "'"$TASK_DEFINITION_FAMILY"'",
@@ -91,7 +84,7 @@ jobs:
             echo "export TASK_DEF_ARN=$TASK_DEF_ARN" >> $BASH_ENV
 
       - run:
-          name: Create ECS Cluster if not exists
+          name: Create ECS Cluster if needed
           command: |
             CLUSTER_STATUS=$(aws ecs describe-clusters \
               --clusters $CLUSTER_NAME \
