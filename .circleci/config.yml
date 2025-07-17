@@ -59,29 +59,28 @@ jobs:
           command: |
             export IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
             export REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
-cat > taskdef.json <<EOF
-{
-  "family": "$TASK_DEFINITION_FAMILY",
-  "networkMode": "awsvpc",
-  "executionRoleArn": "$EXECUTION_ROLE_ARN",
-  "requiresCompatibilities": ["FARGATE"],
-  "cpu": "256",
-  "memory": "512",
-  "containerDefinitions": [
-    {
-      "name": "$CONTAINER_NAME",
-      "image": "$REPOSITORY_URI:$IMAGE_TAG",
-      "portMappings": [
-        {
-          "containerPort": 8080,
-          "protocol": "tcp"
-        }
-      ],
-      "essential": true
-    }
-  ]
-}
-EOF
+
+            echo '{
+              "family": "'"$TASK_DEFINITION_FAMILY"'",
+              "networkMode": "awsvpc",
+              "executionRoleArn": "'"$EXECUTION_ROLE_ARN"'",
+              "requiresCompatibilities": ["FARGATE"],
+              "cpu": "256",
+              "memory": "512",
+              "containerDefinitions": [
+                {
+                  "name": "'"$CONTAINER_NAME"'",
+                  "image": "'"$REPOSITORY_URI:$IMAGE_TAG"'",
+                  "portMappings": [
+                    {
+                      "containerPort": 8080,
+                      "protocol": "tcp"
+                    }
+                  ],
+                  "essential": true
+                }
+              ]
+            }' > taskdef.json
 
             TASK_DEF_ARN=$(aws ecs register-task-definition \
               --cli-input-json file://taskdef.json \
