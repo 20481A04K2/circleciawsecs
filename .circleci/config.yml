@@ -28,7 +28,8 @@ jobs:
           name: Install Docker
           command: |
             yum install -y docker
-            service docker start
+            dockerd-entrypoint.sh &
+            timeout 15 sh -c "until docker info; do sleep 1; done"
 
       - run:
           name: Login to Amazon ECR Public
