@@ -1,14 +1,9 @@
 version: 2.1
 
 executors:
-  aws-cli-executor:
+  docker-executor:
     docker:
-      - image: amazon/aws-cli
-    working_directory: ~/project
-
-jobs:
-  deploy:
-    executor: aws-cli-executor
+      - image: cimg/python:3.11  # CircleCI-supported image with Python
     environment:
       AWS_REGION: ap-south-1
       ECR_REGION: us-east-1
@@ -21,18 +16,28 @@ jobs:
       SECURITY_GROUP_ID: "sg-022ceff300ebad323"
       EXECUTION_ROLE_ARN: arn:aws:iam::528757813453:role/ecsTaskExecutionRole
 
+jobs:
+  deploy:
+    executor: docker-executor
+
     steps:
       - checkout
 
-      - run:
-          name: Install Docker
-          command: |
-            yum install -y docker
-            dockerd-entrypoint.sh &
-            timeout 15 sh -c "until docker info; do sleep 1; done"
+      - setup_remote_docker:
+          version: 20.10.24
+          docker_layer_caching: true
 
       - run:
-          name: Login to Amazon ECR Public
+          name: Install AWS CLI
+          command: |
+            sudo apt update && sudo apt install -y unzip curl
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+            aws --version
+
+      - run:
+          name: Authenticate to ECR Public
           command: |
             REPOSITORY_URI="public.ecr.aws/z8i7v1n4/vamsi-repo"
             IMAGE_TAG=$(echo $CIRCLE_SHA1 | cut -c 1-7)
